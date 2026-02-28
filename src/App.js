@@ -15,7 +15,7 @@ import CompressMpq from './mpqcmp';
 import { getDropFile, isDropFile } from './input/fileDrop';
 import createFileDropTarget from './input/fileDropTarget';
 import createEventListeners from './input/eventListeners';
-import { TOUCH_MOVE, TOUCH_RMB, TOUCH_SHIFT, setTouchMod, updateTouchButton } from './input/touchControls';
+import { TOUCH_MOVE, TOUCH_RMB, TOUCH_SHIFT, setTouchMod as applyTouchMod, updateTouchButton as applyTouchButtonUpdate } from './input/touchControls';
 
 import Peer from 'peerjs';
 
@@ -498,11 +498,11 @@ class App extends React.Component {
   touchCanvas = null;
 
   setTouchMod(index, value, use) {
-    setTouchMod(this, index, value, use);
+    applyTouchMod(this, index, value, use);
   }
 
   updateTouchButton(touches, release) {
-    return updateTouchButton(this, touches, release);
+    return applyTouchButtonUpdate(this, touches, release);
   }
 
   onTouchStart = e => {
