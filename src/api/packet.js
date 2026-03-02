@@ -42,9 +42,6 @@ export class buffer_reader {
   }
   read_buf() {
     const size = this.read32();
-    if (this.pos + size > this.buffer.byteLength) {
-      throw Error('packet too small');
-    }
     const result = this.buffer.subarray(this.pos, this.pos + size);
     this.pos += size;
     return result;
@@ -263,5 +260,5 @@ export const client_packet = {
     size: 4,
     write: (writer, {turn}) => writer.write32(turn),
   },
-  batch: make_batch(() => client_packet),
+  batch: make_batch(() => server_packet),
 };

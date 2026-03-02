@@ -27,15 +27,16 @@ export default class CompressMpq extends React.Component {
     document.body.removeChild(lnk);
   }
   onError(message, stack) {
-    this.props.onClose();
-    this.props.onError(message, stack);
+    const { api } = this.props;
+    api.setState({compress: false});
+    api.onError(message, stack);
   }
 
   onClose = () => {
     if (this.state.url) {
       URL.revokeObjectURL(this.state.url);
     }
-    this.props.onClose();
+    this.props.api.setState({compress: false});
   }
 
   start(file) {
@@ -50,7 +51,7 @@ export default class CompressMpq extends React.Component {
       return (
         <div className="start">
           <p>
-            <a href={url} download="DIABDAT.MPQ">Click here if download doesn&apos;t start.</a>
+            <a href={url} download="DIABDAT.MPQ">Click here if download doesn't start.</a>
           </p>
           <div className="startButton" onClick={this.onClose}>Back</div>
         </div>
