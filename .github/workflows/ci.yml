@@ -21,10 +21,10 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        # --ignore-scripts avoids the node-sass native build which is
-        # incompatible with Node 20+.  The SCSS compilation step is
-        # webpack-only and is not exercised during tests.
-        run: npm ci --ignore-scripts
+        # --ignore-scripts avoids native builds (node-sass was replaced by sass).
+        # --legacy-peer-deps is required because sass-loader 9 and peerjs 1.4.7
+        # have peer-dep ranges that npm 7+ rejects without it.
+        run: npm ci --ignore-scripts --legacy-peer-deps
 
       - name: Run tests
         run: npm test -- --watchAll=false --ci
