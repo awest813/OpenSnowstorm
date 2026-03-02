@@ -1,4 +1,4 @@
-import { buffer_reader } from './packet';
+import { buffer_reader, packet_size } from './packet';
 
 describe('buffer_reader', () => {
   it('initializes correctly with an ArrayBuffer', () => {
@@ -108,5 +108,19 @@ describe('buffer_reader', () => {
       const reader = new buffer_reader(new Uint8Array([3, 0, 0])); // Only 3 bytes for size
       expect(() => reader.read_buf()).toThrow('packet too small');
     });
+  });
+});
+
+describe('packet_size', () => {
+  it('returns correct size for fixed-size packet types', () => {
+    const type = { size: 5 };
+    const packet = {};
+    expect(packet_size(type, packet)).toBe(6);
+  });
+
+  it('returns correct size for dynamic-size packet types', () => {
+    const type = { size: (pkt) => pkt.payload.length + 2 };
+    const packet = { payload: 'hello' };
+    expect(packet_size(type, packet)).toBe(8); // 5 (length) + 2 + 1 (for the code)
   });
 });
