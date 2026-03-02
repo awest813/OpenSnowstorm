@@ -86,6 +86,29 @@ describe('path_name', () => {
   it('handles an empty string', () => {
     expect(path_name('')).toBe('');
   });
+
+  it('handles mixed slashes', () => {
+    expect(path_name('some/dir\\file.mpq')).toBe('file.mpq');
+    expect(path_name('some\\dir/file.mpq')).toBe('file.mpq');
+  });
+
+  it('handles trailing separators', () => {
+    expect(path_name('some/dir/')).toBe('');
+    expect(path_name('some\\dir\\')).toBe('');
+  });
+
+  it('handles paths with only separators', () => {
+    expect(path_name('/')).toBe('');
+    expect(path_name('\\')).toBe('');
+    expect(path_name('//')).toBe('');
+    expect(path_name('\\\\')).toBe('');
+  });
+
+  it('handles root paths and drive letters', () => {
+    expect(path_name('/file.mpq')).toBe('file.mpq');
+    expect(path_name('\\file.mpq')).toBe('file.mpq');
+    expect(path_name('C:\\file.mpq')).toBe('file.mpq');
+  });
 });
 
 // ─── MpqReader ───────────────────────────────────────────────────────────────
