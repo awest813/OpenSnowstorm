@@ -105,7 +105,7 @@ Status legend:
 ### Mobile & Touch
 - ✅ Layout presets for touch controls (`default`, `compact`, `thumb` presets)
 - ✅ Better two-finger pan sensitivity calibration (low/normal/high thresholds)
-- 🔲 Gesture conflict handling (tap/pan/long-press)
+- ✅ Gesture conflict handling (tap/pan/long-press)
 - ✅ First-run onboarding for MPQ import on mobile (dismissible and persisted)
 
 ### Accessibility

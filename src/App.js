@@ -10,7 +10,11 @@ import createFileDropTarget from './input/fileDropTarget';
 import createEventListeners from './input/eventListeners';
 import {
   TOUCH_MOVE, TOUCH_RMB, TOUCH_SHIFT,
+  beginTouchGesture,
+  cancelTouchGesture,
+  finishTouchGesture,
   setTouchMod as applyTouchMod,
+  updateTouchGesture,
   updateTouchButton as applyTouchButtonUpdate,
 } from './input/touchControls';
 import { findKeyboardRule, openKeyboard, handleKeyDown, handleKeyUp, handleKeyboardInput } from './input/keyboard';
@@ -458,6 +462,13 @@ class App extends React.Component {
   onKeyboard = () => handleKeyboardInput(this, 0);
   onKeyboardBlur = () => handleKeyboardInput(this, 1);
 
+  getTouchEventTimestamp(e) {
+    if (typeof e.timeStamp === 'number' && Number.isFinite(e.timeStamp)) {
+      return e.timeStamp;
+    }
+    return performance.now();
+  }
+
   // ─── Touch events ───────────────────────────────────────────────────────────
 
   onTouchStart = e => {
@@ -471,9 +482,15 @@ class App extends React.Component {
     if (applyTouchButtonUpdate(this, e.touches, false)) {
       const {x, y} = getMousePos(this, this.touchCanvas);
       this.game('DApi_Mouse', 0, 0, this.eventMods(e), x, y);
-      if (!this.touchMods[TOUCH_MOVE]) {
+      const useGestureControl = !this.touchMods[TOUCH_MOVE] && !this.touchButton && e.touches.length === 1;
+      if (useGestureControl) {
+        beginTouchGesture(this, this.touchCanvas, this.getTouchEventTimestamp(e));
+      } else if (!this.touchMods[TOUCH_MOVE]) {
+        cancelTouchGesture(this);
         this.game('DApi_Mouse', 1, this.touchMods[TOUCH_RMB] ? 2 : 1, this.eventMods(e), x, y);
       }
+    } else {
+      cancelTouchGesture(this);
     }
   }
 
@@ -486,6 +503,18 @@ class App extends React.Component {
     if (applyTouchButtonUpdate(this, e.touches, false)) {
       const {x, y} = getMousePos(this, this.touchCanvas);
       this.game('DApi_Mouse', 0, 0, this.eventMods(e), x, y);
+      if (this.touchGesture && this.touchCanvas && this.touchGesture.id === this.touchCanvas.identifier) {
+        const pointerButton = this.touchMods[TOUCH_RMB] ? 2 : 1;
+        const gestureUpdate = updateTouchGesture(this, this.touchCanvas, this.getTouchEventTimestamp(e), pointerButton);
+        if (gestureUpdate.startDrag && !this.touchMods[TOUCH_MOVE]) {
+          this.game('DApi_Mouse', 1, pointerButton, this.eventMods(e), x, y);
+        }
+      }
+      if (e.touches.length > 1) {
+        cancelTouchGesture(this);
+      }
+    } else {
+      cancelTouchGesture(this);
     }
   }
 
@@ -495,15 +524,38 @@ class App extends React.Component {
       e.preventDefault();
     }
     const prevTc = this.touchCanvas;
+    const hadGesture = !!this.touchGesture && !!prevTc;
     applyTouchButtonUpdate(this, e.touches, true);
     if (prevTc && !this.touchCanvas) {
       const {x, y} = getMousePos(this, prevTc);
-      this.game('DApi_Mouse', 2, 1, this.eventMods(e), x, y);
-      this.game('DApi_Mouse', 2, 2, this.eventMods(e), x, y);
+      const mods = this.eventMods(e);
+
+      if (hadGesture) {
+        const gestureResult = finishTouchGesture(this, this.getTouchEventTimestamp(e));
+        if (gestureResult.kind === 'drag') {
+          this.game('DApi_Mouse', 2, gestureResult.button || 1, mods, x, y);
+        } else if (gestureResult.kind === 'long-press') {
+          this.game('DApi_Mouse', 1, 2, mods, x, y);
+          this.game('DApi_Mouse', 2, 2, mods, x, y);
+        } else if (gestureResult.kind === 'tap') {
+          const clickButton = this.touchMods[TOUCH_RMB] ? 2 : 1;
+          this.game('DApi_Mouse', 1, clickButton, mods, x, y);
+          this.game('DApi_Mouse', 2, clickButton, mods, x, y);
+        } else {
+          this.game('DApi_Mouse', 2, 1, mods, x, y);
+          this.game('DApi_Mouse', 2, 2, mods, x, y);
+        }
+      } else {
+        this.game('DApi_Mouse', 2, 1, mods, x, y);
+        this.game('DApi_Mouse', 2, 2, mods, x, y);
+      }
 
       if (this.touchMods[TOUCH_RMB] && (!this.touchButton || this.touchButton.index !== TOUCH_RMB)) {
         applyTouchMod(this, TOUCH_RMB, false);
       }
+    }
+    if (this.touchGesture && (!this.touchCanvas || this.touchGesture.id !== this.touchCanvas.identifier)) {
+      cancelTouchGesture(this);
     }
     if (!document.fullscreenElement) {
       this.element.requestFullscreen();

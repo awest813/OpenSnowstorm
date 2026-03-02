@@ -1,4 +1,15 @@
-import { TOUCH_MOVE, TOUCH_RMB, setTouchMod, updateTouchButton } from './touchControls';
+import {
+  TOUCH_GESTURE_DRAG_THRESHOLD,
+  TOUCH_GESTURE_LONG_PRESS_MS,
+  TOUCH_MOVE,
+  TOUCH_RMB,
+  beginTouchGesture,
+  cancelTouchGesture,
+  finishTouchGesture,
+  setTouchMod,
+  updateTouchButton,
+  updateTouchGesture,
+} from './touchControls';
 
 function createApp() {
   const calls = [];
@@ -45,7 +56,7 @@ describe('touchControls', () => {
     expect(hasCanvasTouch).toBe(true);
     expect(app.touchButton.index).toBe(TOUCH_MOVE);
     expect(app.touchMods[TOUCH_MOVE]).toBe(true);
-    expect(app.touchCanvas).toEqual({ clientX: 12, clientY: 13 });
+    expect(app.touchCanvas).toEqual({ identifier: 11, clientX: 12, clientY: 13 });
   });
 
   it('toggles sticky button state on release inside same button bounds', () => {
@@ -99,5 +110,48 @@ describe('touchControls', () => {
     expect(highSensitivityApp.calls).toEqual([
       ['DApi_Key', 0, 0, 37],
     ]);
+  });
+
+  it('starts and upgrades gesture to drag after moving threshold', () => {
+    const app = createApp();
+
+    beginTouchGesture(app, {identifier: 1, clientX: 20, clientY: 30}, 1000);
+
+    const beforeDrag = updateTouchGesture(app, {identifier: 1, clientX: 20, clientY: 30}, 1100, 1);
+    expect(beforeDrag.startDrag).toBe(false);
+    expect(beforeDrag.dragging).toBe(false);
+
+    const afterDrag = updateTouchGesture(
+      app,
+      {identifier: 1, clientX: 20 + TOUCH_GESTURE_DRAG_THRESHOLD, clientY: 30},
+      1200,
+      1,
+    );
+    expect(afterDrag.startDrag).toBe(true);
+    expect(afterDrag.dragging).toBe(true);
+    expect(afterDrag.dragButton).toBe(1);
+  });
+
+  it('classifies finished gesture as long-press when held without movement', () => {
+    const app = createApp();
+    beginTouchGesture(app, {identifier: 3, clientX: 10, clientY: 10}, 500);
+    updateTouchGesture(app, {identifier: 3, clientX: 12, clientY: 11}, 650, 1);
+
+    const result = finishTouchGesture(app, 500 + TOUCH_GESTURE_LONG_PRESS_MS + 1);
+
+    expect(result.kind).toBe('long-press');
+    expect(result.button).toBe(2);
+    expect(app.touchGesture).toBeUndefined();
+  });
+
+  it('cancels active gesture state', () => {
+    const app = createApp();
+    beginTouchGesture(app, {identifier: 4, clientX: 0, clientY: 0}, 50);
+
+    const cancelled = cancelTouchGesture(app);
+
+    expect(cancelled).toBeTruthy();
+    expect(cancelled.id).toBe(4);
+    expect(app.touchGesture).toBeUndefined();
   });
 });
