@@ -1,11 +1,20 @@
 export const TOUCH_MOVE = 0;
 export const TOUCH_RMB = 1;
 export const TOUCH_SHIFT = 2;
+export const TOUCH_GESTURE_DRAG_THRESHOLD = 14;
+export const TOUCH_GESTURE_LONG_PRESS_MS = 450;
 export const TOUCH_PAN_SENSITIVITY_DIVISORS = {
   low: 8,
   normal: 12,
   high: 16,
 };
+
+function resolveTimestamp(now) {
+  if (typeof now === 'number' && Number.isFinite(now)) {
+    return now;
+  }
+  return performance.now();
+}
 
 function getPanStep(app) {
   const sensitivity = (app.state && app.state.touchPanSensitivity) || app.touchPanSensitivity || 'normal';
@@ -28,6 +37,86 @@ export function setTouchMod(app, index, value, use) {
   }
 }
 
+export function beginTouchGesture(app, touch, now) {
+  if (!touch) {
+    delete app.touchGesture;
+    return null;
+  }
+  const startedAt = resolveTimestamp(now);
+  const gesture = {
+    id: touch.identifier,
+    startX: touch.clientX,
+    startY: touch.clientY,
+    lastX: touch.clientX,
+    lastY: touch.clientY,
+    startedAt,
+    dragging: false,
+    dragButton: null,
+  };
+  app.touchGesture = gesture;
+  return gesture;
+}
+
+export function updateTouchGesture(app, touch, now, button = 1) {
+  const gesture = app.touchGesture;
+  if (!gesture || !touch || touch.identifier !== gesture.id) {
+    return { active: false, startDrag: false, dragging: false, dragButton: null };
+  }
+
+  const timestamp = resolveTimestamp(now);
+  gesture.lastX = touch.clientX;
+  gesture.lastY = touch.clientY;
+
+  const dx = gesture.lastX - gesture.startX;
+  const dy = gesture.lastY - gesture.startY;
+  const moved = Math.max(Math.abs(dx), Math.abs(dy)) >= TOUCH_GESTURE_DRAG_THRESHOLD;
+
+  let startDrag = false;
+  if (moved && !gesture.dragging) {
+    gesture.dragging = true;
+    gesture.dragButton = button;
+    startDrag = true;
+  }
+
+  return {
+    active: true,
+    startDrag,
+    dragging: gesture.dragging,
+    dragButton: gesture.dragButton,
+    moved,
+    duration: timestamp - gesture.startedAt,
+  };
+}
+
+export function cancelTouchGesture(app) {
+  const gesture = app.touchGesture || null;
+  delete app.touchGesture;
+  return gesture;
+}
+
+export function finishTouchGesture(app, now) {
+  const gesture = app.touchGesture;
+  if (!gesture) {
+    return { kind: 'none', button: null, duration: 0 };
+  }
+
+  const timestamp = resolveTimestamp(now);
+  const dx = gesture.lastX - gesture.startX;
+  const dy = gesture.lastY - gesture.startY;
+  const moved = Math.max(Math.abs(dx), Math.abs(dy)) >= TOUCH_GESTURE_DRAG_THRESHOLD;
+  const duration = timestamp - gesture.startedAt;
+
+  delete app.touchGesture;
+
+  if (gesture.dragging || moved) {
+    return { kind: 'drag', button: gesture.dragButton || 1, duration };
+  }
+  if (duration >= TOUCH_GESTURE_LONG_PRESS_MS) {
+    return { kind: 'long-press', button: 2, duration };
+  }
+  return { kind: 'tap', button: 1, duration };
+}
+
 export function updateTouchButton(app, touches, release) {
   let touchOther = null;
   if (!app.touchControls) {
@@ -45,7 +134,11 @@ export function updateTouchButton(app, touches, release) {
       btn.clientY = clientY;
       app.touchCanvas = [...touches].find(t => t.identifier !== identifier);
       if (app.touchCanvas) {
-        app.touchCanvas = { clientX: app.touchCanvas.clientX, clientY: app.touchCanvas.clientY };
+        app.touchCanvas = {
+          identifier: app.touchCanvas.identifier,
+          clientX: app.touchCanvas.clientX,
+          clientY: app.touchCanvas.clientY,
+        };
       }
       delete app.panPos;
       return app.touchCanvas != null;
@@ -112,7 +205,11 @@ export function updateTouchButton(app, touches, release) {
 
   app.touchCanvas = [...touches].find(t => !touchOther || t.identifier !== touchOther.id);
   if (app.touchCanvas) {
-    app.touchCanvas = { clientX: app.touchCanvas.clientX, clientY: app.touchCanvas.clientY };
+    app.touchCanvas = {
+      identifier: app.touchCanvas.identifier,
+      clientX: app.touchCanvas.clientX,
+      clientY: app.touchCanvas.clientY,
+    };
   }
   return app.touchCanvas != null;
 }
