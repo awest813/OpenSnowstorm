@@ -1,16 +1,6 @@
 import Peer from 'peerjs';
 import { buffer_reader, read_packet, write_packet, client_packet, server_packet, RejectionReason } from './packet';
 
-/*function log_packet(data, type) {
-  const reader = new buffer_reader(data);
-  const id = reader.read8();
-  for (let [name, {code, read}] of Object.entries(type)) {
-    if (code === id && (name !== 'message' && name !== 'turn')) {
-      console.log(`${type === client_packet ? 'client_packet' : 'server_packet'}.${name} ${JSON.stringify(read(reader))}`);
-    }
-  }
-}*/
-
 const PeerID = name => `diabloweb_dDv62yHQrZJP28tBEHL_${name}`;
 const Options = {port: 443, secure: true};
 const MAX_PLRS = 4;
@@ -235,15 +225,8 @@ export default function webrtc_open(onMessage) {
 
   let version = 0;
 
-  /*const prevMessage = onMessage;
-  onMessage = data => {
-    log_packet(data, server_packet);
-    prevMessage(data);
-  };*/
-
   return {
     send: function(packet) {
-      //log_packet(packet, client_packet);
       const reader = new buffer_reader(packet);
       const {type, packet: pkt} = read_packet(reader, client_packet);
       switch (type.code) {
