@@ -85,13 +85,15 @@ export function createTransportAdapter(worker, transport, hooks = {}) {
 
     /**
      * Stop any pending flush timer. Must be called when the game session ends
-     * to prevent timer leaks. Safe to call multiple times.
+     * to prevent timer leaks. Any queued-but-unflushed packets are dropped.
+     * Safe to call multiple times.
      */
     dispose() {
       if (flushTimeoutId !== null) {
         clearTimeout(flushTimeoutId);
         flushTimeoutId = null;
       }
+      queue = [];
     },
   };
 }
