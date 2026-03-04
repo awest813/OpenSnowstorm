@@ -69,7 +69,15 @@ export default class CompressMpq extends React.Component {
         <div className="loading" role="status" aria-live="polite" aria-atomic="true">
           {(progress && progress.text) || 'Processing...'}
           {progress != null && !!progress.total && (
-            <span className="progressBar"><span><span style={{width: `${Math.round(100 * progress.loaded / progress.total)}%`}}/></span></span>
+            <span
+              className="progressBar"
+              role="progressbar"
+              aria-valuenow={Math.round(100 * progress.loaded / progress.total)}
+              aria-valuemin="0"
+              aria-valuemax="100"
+            >
+              <span><span style={{width: `${Math.round(100 * progress.loaded / progress.total)}%`}}/></span>
+            </span>
           )}
         </div>
       );
