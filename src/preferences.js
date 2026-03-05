@@ -8,6 +8,7 @@ export const DEFAULT_PREFERENCES = {
   touchLayoutPreset: DEFAULT_TOUCH_LAYOUT_PRESET,
   touchPanSensitivity: DEFAULT_TOUCH_PAN_SENSITIVITY,
   mobileOnboardingDismissed: false,
+  highContrastMode: false,
 };
 
 const STORAGE_KEY = 'diabloweb.preferences.v1';
@@ -35,11 +36,16 @@ function sanitizeMobileOnboardingDismissed(value) {
   return Boolean(value);
 }
 
+function sanitizeHighContrastMode(value) {
+  return Boolean(value);
+}
+
 export function normalizePreferences(raw = {}) {
   return {
     touchLayoutPreset: sanitizeTouchLayoutPreset(raw.touchLayoutPreset),
     touchPanSensitivity: sanitizeTouchPanSensitivity(raw.touchPanSensitivity),
     mobileOnboardingDismissed: sanitizeMobileOnboardingDismissed(raw.mobileOnboardingDismissed),
+    highContrastMode: sanitizeHighContrastMode(raw.highContrastMode),
   };
 }
 

@@ -21,6 +21,7 @@ describe('preferences', () => {
       touchLayoutPreset: 'default',
       touchPanSensitivity: 'normal',
       mobileOnboardingDismissed: true,
+      highContrastMode: false,
     });
   });
 
@@ -36,6 +37,7 @@ describe('preferences', () => {
       touchLayoutPreset: 'thumb',
       touchPanSensitivity: 'high',
       mobileOnboardingDismissed: true,
+      highContrastMode: false,
     });
   });
 
@@ -43,5 +45,19 @@ describe('preferences', () => {
     window.localStorage.setItem('diabloweb.preferences.v1', '{bad json');
 
     expect(loadPreferences()).toEqual(DEFAULT_PREFERENCES);
+  });
+
+  it('persists and restores highContrastMode', () => {
+    savePreferences({highContrastMode: true});
+    expect(loadPreferences().highContrastMode).toBe(true);
+    savePreferences({highContrastMode: false});
+    expect(loadPreferences().highContrastMode).toBe(false);
+  });
+
+  it('normalizes highContrastMode to boolean', () => {
+    expect(normalizePreferences({highContrastMode: 1}).highContrastMode).toBe(true);
+    expect(normalizePreferences({highContrastMode: 0}).highContrastMode).toBe(false);
+    expect(normalizePreferences({highContrastMode: 'true'}).highContrastMode).toBe(true);
+    expect(normalizePreferences({}).highContrastMode).toBe(false);
   });
 });

@@ -105,4 +105,35 @@ describe('StartScreen', () => {
 
     expect(dismissMobileOnboarding).toHaveBeenCalledTimes(1);
   });
+
+  it('renders display settings section with high-contrast checkbox', async () => {
+    await renderWithSession({highContrastMode: false});
+
+    const section = container.querySelector('.displaySettings');
+    expect(section).not.toBeNull();
+    expect(section.getAttribute('role')).toBe('group');
+
+    const checkbox = container.querySelector('.displaySettings input[type="checkbox"]');
+    expect(checkbox).not.toBeNull();
+    expect(checkbox.checked).toBe(false);
+  });
+
+  it('calls setHighContrastMode when high-contrast checkbox is toggled', async () => {
+    const setHighContrastMode = jest.fn();
+    await renderWithSession({highContrastMode: false, setHighContrastMode});
+
+    const checkbox = container.querySelector('.displaySettings input[type="checkbox"]');
+
+    act(() => {
+      checkbox.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+    });
+
+    expect(setHighContrastMode).toHaveBeenCalledWith(true);
+  });
+
+  it('reflects highContrastMode true on checkbox', async () => {
+    await renderWithSession({highContrastMode: true});
+    const checkbox = container.querySelector('.displaySettings input[type="checkbox"]');
+    expect(checkbox.checked).toBe(true);
+  });
 });

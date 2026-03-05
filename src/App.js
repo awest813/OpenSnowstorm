@@ -46,11 +46,24 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 let keyboardRule = null;
-try {
-  keyboardRule = findKeyboardRule();
-} catch (e) {
-  // Keyboard rule detection is optional; ignore failures
+let keyboardRuleResolved = false;
+
+function getKeyboardRule() {
+  if (!keyboardRuleResolved) {
+    keyboardRuleResolved = true;
+    try {
+      keyboardRule = findKeyboardRule();
+    } catch (e) {
+      // Keyboard rule detection is optional; ignore failures
+    }
+  }
+  return keyboardRule;
 }
+
+const scheduleIdle = typeof requestIdleCallback === 'function'
+  ? cb => requestIdleCallback(cb, {timeout: 500})
+  : cb => setTimeout(cb, 0);
+
 const CompressMpq = React.lazy(() => import('./mpqcmp'));
 
 class App extends React.Component {
@@ -69,6 +82,7 @@ class App extends React.Component {
     isTouchDevice: false,
     showMobileOnboarding: false,
     mobileOnboardingDismissed: false,
+    highContrastMode: false,
     multiplayerStatus: 'idle',
     multiplayerErrorCategory: null,
     multiplayerMessage: '',
@@ -146,14 +160,20 @@ class App extends React.Component {
   componentDidMount() {
     this.fileDropTarget.attach();
     window.addEventListener('swUpdate', this.onSwUpdate);
-    const preferences = loadPreferences();
-    const isTouchDevice = this.detectTouchDevice();
-    this.setState({
-      touchLayoutPreset: preferences.touchLayoutPreset,
-      touchPanSensitivity: preferences.touchPanSensitivity,
-      mobileOnboardingDismissed: preferences.mobileOnboardingDismissed,
-      isTouchDevice,
-      showMobileOnboarding: isTouchDevice && !preferences.mobileOnboardingDismissed,
+
+    scheduleIdle(() => {
+      const preferences = loadPreferences();
+      const isTouchDevice = this.detectTouchDevice();
+      React.startTransition(() => {
+        this.setState({
+          touchLayoutPreset: preferences.touchLayoutPreset,
+          touchPanSensitivity: preferences.touchPanSensitivity,
+          mobileOnboardingDismissed: preferences.mobileOnboardingDismissed,
+          highContrastMode: preferences.highContrastMode,
+          isTouchDevice,
+          showMobileOnboarding: isTouchDevice && !preferences.mobileOnboardingDismissed,
+        });
+      });
     });
 
     this.fs.then(fs => {
@@ -232,7 +252,7 @@ class App extends React.Component {
   onProgress(progress) { handleProgress(this, progress); }
   setCurrentSave(name) { setCurrentSave(this, name); }
   setCursorPos(x, y) { setCursorPos(this, x, y); }
-  openKeyboard(rect) { openKeyboard(this, keyboardRule, rect); }
+  openKeyboard(rect) { openKeyboard(this, getKeyboardRule(), rect); }
   onMultiplayerEvent = event => {
     this.multiplayerEvents = [...(this.multiplayerEvents || []), event];
     if (this.multiplayerEvents.length > 200) {
@@ -342,6 +362,12 @@ class App extends React.Component {
     });
   }
 
+  setHighContrastMode = enabled => {
+    const highContrastMode = Boolean(enabled);
+    savePreferences({highContrastMode});
+    this.setState({highContrastMode});
+  }
+
   flushPendingCompressedFile = () => {
     if (!this.pendingCompressedFile || !this.compressMpq || !this.state.compress) {
       return;
@@ -390,6 +416,7 @@ class App extends React.Component {
       touchPanSensitivity,
       isTouchDevice,
       showMobileOnboarding,
+      highContrastMode,
     } = this.state;
     return {
       started,
@@ -427,6 +454,8 @@ class App extends React.Component {
       isTouchDevice,
       showMobileOnboarding,
       dismissMobileOnboarding: this.dismissMobileOnboarding,
+      highContrastMode,
+      setHighContrastMode: this.setHighContrastMode,
     };
   }
 
@@ -648,12 +677,12 @@ class App extends React.Component {
   }
 
   render() {
-    const {started, error, dropping, updateAvailable, touchLayoutPreset} = this.state;
+    const {started, error, dropping, updateAvailable, touchLayoutPreset, highContrastMode} = this.state;
     const sessionContextValue = this.getSessionContextValue();
     const touchPresetClass = `touch-preset-${touchLayoutPreset || DEFAULT_TOUCH_LAYOUT_PRESET}`;
     return (
       <SessionContext.Provider value={sessionContextValue}>
-        <div className={classNames('App', touchPresetClass, {touch: this.touchControls, started, dropping, keyboard: !!this.showKeyboard})} ref={this.setElement}>
+        <div className={classNames('App', touchPresetClass, {'high-contrast': highContrastMode, touch: this.touchControls, started, dropping, keyboard: !!this.showKeyboard})} ref={this.setElement}>
           {updateAvailable && (
             <div className="updateBanner" role="status" aria-live="polite" aria-atomic="true">
               A new version is available.{' '}
