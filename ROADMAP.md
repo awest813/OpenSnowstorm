@@ -172,6 +172,86 @@ Status legend:
 
 ---
 
+## Safe Fix Roadmap — Performance + High/Medium Impact Improvements
+
+**Objective:** deliver measurable responsiveness and reliability gains without changing gameplay rules or risky engine internals.
+
+### Prioritization rules
+- **High impact (H):** expected user-facing improvement to load time, frame pacing, connection stability, or crash rate.
+- **Medium impact (M):** meaningful quality, DX, or reliability improvement with narrower scope.
+- **Safety bar:** default to incremental, reversible changes with feature flags or clear rollback path.
+
+### Track A — Performance fixes (safe-first)
+
+#### A1. Startup and load-time wins (H)
+- 🔲 **Defer non-critical initialization until after first frame** (analytics/diagnostics hydration, optional UI helpers).
+  - Success metric: lower Time to Interactive and faster first render on mid-tier mobile.
+  - Safety: gate each deferred task behind explicit `postStart` hooks.
+- 🔲 **Add route/component-level lazy boundaries for non-core overlays** (help/about/changelog panels if bundled in main path).
+  - Success metric: reduced initial JS payload.
+  - Safety: keep preload fallback for common path to avoid UX regressions.
+- 🔲 **Precompute and cache deterministic derived UI state** used during loading/start screen.
+  - Success metric: lower render churn before session start.
+  - Safety: memoized selectors with unit snapshots.
+
+#### A2. Runtime frame stability (H)
+- 🔲 **Profile and cap expensive overlay re-renders** (status banners, dialogs, touch controls) with memoization and stable callbacks.
+  - Success metric: fewer long tasks and reduced dropped frames on touch devices.
+  - Safety: add focused interaction tests for affected controls.
+- 🔲 **Batch non-urgent UI state updates** from worker/transport events where possible.
+  - Success metric: fewer React commits under multiplayer event bursts.
+  - Safety: preserve ordering guarantees for gameplay-critical events.
+- 🔲 **Throttle debug/diagnostic logging in hot paths** while preserving structured error events.
+  - Success metric: lower CPU overhead in sustained sessions.
+  - Safety: keep full logs behind opt-in debug mode.
+
+#### A3. Memory and resource lifecycle (M)
+- 🔲 **Add periodic leak checks in dev/test for listeners, timers, and worker handles** after session teardown.
+  - Success metric: zero growth after repeated start/stop cycles.
+  - Safety: no production behavior changes; test-only guardrails.
+- 🔲 **Audit binary buffer retention in file import/export flow** to ensure prompt release.
+  - Success metric: lower memory spikes during MPQ/save operations.
+  - Safety: add regression tests around repeated imports.
+
+### Track B — Other safe high/medium impact fixes
+
+#### B1. Reliability and recovery (H)
+- 🔲 **Connection recovery hardening**: exponential backoff caps + clearer terminal failure states.
+  - Success metric: improved reconnect success rate and fewer user-abandoned sessions.
+  - Safety: retain manual reconnect and rollback to current strategy via config toggle.
+- 🔲 **Storage readiness checks before session start** with actionable preflight messages.
+  - Success metric: fewer mid-session storage errors.
+  - Safety: read-only preflight first, no migration side effects.
+
+#### B2. Quality guardrails in CI (M)
+- 🔲 **Performance budget gates for critical bundles and worker payload** (warning then fail threshold).
+  - Success metric: prevent slow bundle creep.
+  - Safety: phased rollout (warn-only for first week).
+- 🔲 **Add smoke benchmark script** (cold start, session start, teardown loop) for trend tracking.
+  - Success metric: detectable regressions before release.
+  - Safety: non-blocking reporting initially.
+
+#### B3. Accessibility + UX polish with low risk (M)
+- 🔲 **Reduce motion option for non-gameplay UI animations**.
+  - Success metric: better comfort and accessibility compliance.
+  - Safety: scoped to overlays/chrome; no core renderer impact.
+- 🔲 **Improve error message taxonomy** (network/storage/import) with direct next steps.
+  - Success metric: faster user recovery and fewer duplicate bug reports.
+  - Safety: text/UX-only changes plus snapshot tests.
+
+### Suggested execution order (safe rollout)
+1. **Weeks 1–2:** baseline profiling + instrumentation; land A1 quick wins and B2 warn-only budgets.
+2. **Weeks 3–4:** land A2 render/update optimizations with targeted regression tests.
+3. **Weeks 5–6:** ship B1 reliability improvements and A3 memory guardrails.
+4. **Weeks 7–8:** complete B3 UX/accessibility items and tighten CI thresholds from warn to fail where stable.
+
+### Definition of done for this roadmap slice
+- At least **3 high-impact items** shipped with before/after measurements.
+- No gameplay behavior regressions in smoke + unit/integration checks.
+- New guardrails (budget/benchmark/leak checks) enabled in CI to keep gains durable.
+
+---
+
 ## Contribution alignment
 
 If you want to contribute against this roadmap:
