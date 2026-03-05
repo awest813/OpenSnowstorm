@@ -112,7 +112,7 @@ Status legend:
 - ✅ Keyboard-operable overlay controls
 - ✅ Focus trap + return-focus behavior for dialogs
 - ✅ Improved ARIA labeling and semantic landmarks in app chrome
-- 🚧 Optional high-contrast UI mode (outside core game rendering)
+- ✅ Optional high-contrast UI mode (outside core game rendering)
 
 ### UI Polish
 - ✅ Diablo-themed start screen with game title header
@@ -122,7 +122,7 @@ Status legend:
 - ✅ Consistent gold/dark color palette across all overlays
 
 ### Performance
-- 🚧 Reduce startup main-thread blocking
+- ✅ Reduce startup main-thread blocking
 - 🔲 Profile worker hotspots and optimize render patch pipeline
 - ✅ Lazy-load MPQ compression tooling (loaded only when compressor UI opens)
 - ✅ Add bundle-size budget checks in CI (`npm run check:bundle-budget`)
