@@ -110,9 +110,22 @@ export const RejectionReason = {
   CREATE_GAME_EXISTS: 0x06,
 };
 
+// Optimization: Cache packet type lookups by code to prevent O(N) lookup on every read
+const typeMapCache = new WeakMap();
+
 export function read_packet(reader, types) {
   const code = reader.read8();
-  const cls = Object.values(types).find(cls => cls.code === code);
+  let codeMap = typeMapCache.get(types);
+  if (!codeMap) {
+    codeMap = new Map();
+    for (const cls of Object.values(types)) {
+      if (cls && cls.code !== undefined) {
+        codeMap.set(cls.code, cls);
+      }
+    }
+    typeMapCache.set(types, codeMap);
+  }
+  const cls = codeMap.get(code);
   if (!cls) {
     throw Error('invalid packet code');
   }
