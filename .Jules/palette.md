@@ -7,3 +7,6 @@
 ## 2026-03-19 - Replacing 'Click here' anti-patterns in links and buttons
 **Learning:** The "Click here" anti-pattern reduces both scannability for sighted users and usability for screen reader users, who often navigate by reading out a list of links or buttons without surrounding context. Long explanatory phrases inside interactive elements also clutter the UI.
 **Action:** Always ensure that link and button texts use concise, action-oriented phrases (e.g., 'Compress the MPQ'). Move any lengthy, non-actionable explanatory text outside the interactive element to improve scannability and screen reader compatibility.
+## 2026-03-24 - Contextual Scannability in Start Screen Instructions
+**Learning:** Using spatially-dependent language like "click the button below" violates WCAG 1.3.3 and creates cognitive overhead for screen reader users when scanning a page. They might encounter the instructional text out-of-order relative to the button if navigating via element lists.
+**Action:** Replace spatial directions with direct, action-oriented descriptions (e.g., "select an MPQ file") that clearly describe the expected user action rather than relying on visual layout cues.
