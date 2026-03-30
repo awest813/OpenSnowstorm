@@ -30,6 +30,8 @@ export default function StartScreen(props) {
   const isTouchDevice = props.isTouchDevice != null ? props.isTouchDevice : session.isTouchDevice;
   const showMobileOnboarding = props.showMobileOnboarding != null ? props.showMobileOnboarding : session.showMobileOnboarding;
   const onDismissMobileOnboarding = props.onDismissMobileOnboarding || session.dismissMobileOnboarding;
+  const showTesterWelcome = props.showTesterWelcome != null ? props.showTesterWelcome : session.showTesterWelcome;
+  const onDismissTesterWelcome = props.onDismissTesterWelcome || session.dismissTesterWelcome;
   const highContrastMode = props.highContrastMode != null ? props.highContrastMode : session.highContrastMode;
   const onHighContrastModeChange = props.onHighContrastModeChange || session.setHighContrastMode;
   const mpqInputRef = React.useRef(null);
@@ -47,20 +49,96 @@ export default function StartScreen(props) {
         <span className="startTitleText">DIABLO</span>
         <span className="startTitleDeco">⚔</span>
       </div>
-      <p>
-        This is a web port of the original Diablo game, based on source code reconstructed by
-        GalaXyHaXz and devilution team. The project page with information and links can be found over here{' '}
-        <ExternalLink href="https://github.com/d07RiV/diabloweb">https://github.com/d07RiV/diabloweb</ExternalLink>
+
+      {showTesterWelcome && (
+        <div className="testerWelcome" role="note" aria-live="polite">
+          <div className="testerWelcomeTitle">Testing this build</div>
+          <p className="testerWelcomeLead">
+            Quick checks: confirm the game loads, audio and input feel right, and saves stick after a refresh.
+          </p>
+          <ul className="testerWelcomeList">
+            <li>
+              <strong>Fastest path:</strong> use <strong>Play Shareware</strong> below—no files needed (first launch may download data).
+            </li>
+            <li>
+              <strong>Retail:</strong> you need <strong>DIABDAT.MPQ</strong> from a copy you own (
+              <ExternalLink href="https://www.gog.com/game/diablo">GoG</ExternalLink>
+              ). Drag it onto the page or use <strong>Select MPQ</strong>.
+            </li>
+            <li>
+              <strong>Saves:</strong> stored in this browser (IndexedDB). After a character exists, use <strong>Manage Saves</strong> to export or clean up.
+            </li>
+          </ul>
+          <button type="button" className="linkButton" onClick={onDismissTesterWelcome}>
+            Got it, hide this panel
+          </button>
+        </div>
+      )}
+
+      <p className="startMeta">
+        Web port based on reconstructed source (
+        <ExternalLink href="https://github.com/d07RiV/diabloweb">project on GitHub</ExternalLink>
+        ). Not affiliated with Blizzard.
       </p>
-      <p>
-        If you own the original game, you can drop the original DIABDAT.MPQ onto this page or click the button below to start playing.
-        The game can be purchased from <ExternalLink href="https://www.gog.com/game/diablo">GoG</ExternalLink>.
-        {' '}
-        <button type="button" className="linkButton" onClick={onCompress}>
-          Compress the MPQ
-        </button>
-        {' '}to greatly reduce its size.
-      </p>
+
+      <div className="startQuickPaths" aria-label="Ways to start">
+        <div className="startPathCard startPathCard--primary">
+          <div className="startPathCardLabel">Fastest try</div>
+          <h2 className="startPathCardTitle">Shareware</h2>
+          <p className="startPathCardDesc">
+            {hasSpawn
+              ? 'Shareware data is already cached in this browser.'
+              : 'Downloads shareware data on first launch (~50 MB).'}
+          </p>
+          <button type="button" className="startButton startButton--primary startPathCardCta" onClick={() => onStart(null)}>
+            Play Shareware
+          </button>
+        </div>
+        <div className="startPathCard">
+          <div className="startPathCardLabel">Full game</div>
+          <h2 className="startPathCardTitle">Retail MPQ</h2>
+          <p className="startPathCardDesc">
+            Select <strong>DIABDAT.MPQ</strong> or drop it anywhere on the page.{' '}
+            <button type="button" className="linkButton" onClick={onCompress}>
+              Compress the MPQ
+            </button>
+            {' '}for a smaller file.
+          </p>
+          <button type="button" className="startButton startPathCardCta" onClick={openMpqPicker}>
+            Select MPQ
+          </button>
+        </div>
+      </div>
+      <input
+        accept=".mpq"
+        type="file"
+        ref={mpqInputRef}
+        style={{display: 'none'}}
+        aria-label="Select MPQ file"
+        onChange={e => {
+          const {files} = e.target;
+          if (files && files.length > 0) onStart(files[0]);
+        }}
+      />
+
+      <ol className="startStepList">
+        <li>
+          <span className="startStepTitle">Choose how to load data</span>
+          Shareware is the quickest smoke test; retail needs your <strong>DIABDAT.MPQ</strong>.
+        </li>
+        <li>
+          <span className="startStepTitle">Optional: shrink your MPQ</span>
+          Use <button type="button" className="linkButton" onClick={onCompress}>Compress the MPQ</button> before selecting it if you want a smaller upload.
+        </li>
+        <li>
+          <span className="startStepTitle">Saves and issues</span>
+          {hasSaves
+            ? 'You have save files in this browser—open Manage Saves to download or remove them.'
+            : 'After you play, saves appear here; use Manage Saves to back them up.'}{' '}
+          If something breaks, use the error screen’s link to report on GitHub with steps to reproduce.
+        </li>
+      </ol>
+
       {showMobileOnboarding && (
         <div className="mobileOnboarding" role="note" aria-live="polite">
           <div className="mobileOnboardingTitle">Mobile Quick Start</div>
@@ -114,22 +192,9 @@ export default function StartScreen(props) {
           <span>High-contrast UI mode</span>
         </label>
       </div>
-      {!hasSpawn && (
-        <p>Or you can play the shareware version for free (50MB download).</p>
-      )}
+
       <div className="startActions">
         <button type="button" className="startButton startButton--primary" onClick={openMpqPicker}>Select MPQ</button>
-        <input
-          accept=".mpq"
-          type="file"
-          ref={mpqInputRef}
-          style={{display: 'none'}}
-          aria-label="Select MPQ file"
-          onChange={e => {
-            const {files} = e.target;
-            if (files && files.length > 0) onStart(files[0]);
-          }}
-        />
         <button type="button" className="startButton" onClick={() => onStart(null)}>Play Shareware</button>
         {hasSaves && <button type="button" className="startButton startButton--secondary" onClick={onShowSaves}>Manage Saves</button>}
       </div>
