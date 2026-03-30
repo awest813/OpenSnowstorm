@@ -60,7 +60,9 @@ describe('session context-backed UI components', () => {
     const buttons = Array.from(container.querySelectorAll('button.startButton'));
     const sharewareButton = buttons.find(node => node.textContent === 'Play Shareware');
     const manageSavesButton = buttons.find(node => node.textContent === 'Manage Saves');
-    const compressButton = container.querySelector('.linkButton');
+    const compressButtons = Array.from(container.querySelectorAll('button.linkButton'))
+      .filter(node => node.textContent.includes('Compress the MPQ'));
+    const compressButton = compressButtons[0];
 
     expect(sharewareButton).toBeTruthy();
     expect(manageSavesButton).toBeTruthy();
