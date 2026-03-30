@@ -117,7 +117,7 @@ describe('StartScreen', () => {
     });
 
     expect(container.querySelector('.mobileOnboarding')).not.toBeNull();
-    const dismiss = Array.from(container.querySelectorAll('button.linkButton'))
+    const dismiss = Array.from(container.querySelectorAll('.mobileOnboarding button.linkButton'))
       .find(node => node.textContent.trim() === 'Got it');
 
     act(() => {
@@ -125,6 +125,23 @@ describe('StartScreen', () => {
     });
 
     expect(dismissMobileOnboarding).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders tester welcome and dismisses it', async () => {
+    const dismissTesterWelcome = jest.fn();
+    await renderWithSession({
+      showTesterWelcome: true,
+      dismissTesterWelcome,
+    });
+
+    expect(container.querySelector('.testerWelcome')).not.toBeNull();
+    const dismiss = Array.from(container.querySelectorAll('.testerWelcome button.linkButton'))[0];
+
+    act(() => {
+      dismiss.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+    });
+
+    expect(dismissTesterWelcome).toHaveBeenCalledTimes(1);
   });
 
   it('renders display settings section with high-contrast checkbox', async () => {

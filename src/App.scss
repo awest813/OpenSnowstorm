@@ -139,6 +139,105 @@ body, #root, .App {
       opacity: 0.7;
     }
 
+    .testerWelcome {
+      margin: 0 0 16px;
+      padding: 12px 14px;
+      border: 1px solid #8b6914;
+      background: linear-gradient(180deg, rgba(58, 41, 17, 0.75) 0%, rgba(26, 18, 8, 0.85) 100%);
+      text-align: left;
+      font-size: 14px;
+      border-radius: 2px;
+      .testerWelcomeTitle {
+        font-size: 17px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        color: #f0d78c;
+      }
+      .testerWelcomeLead {
+        margin: 0 0 10px;
+        color: #dccaa8;
+        line-height: 1.45;
+      }
+      .testerWelcomeList {
+        margin: 0 0 10px 18px;
+        padding: 0;
+        color: #c8b89a;
+        line-height: 1.45;
+        li {
+          margin-bottom: 6px;
+        }
+      }
+    }
+
+    .startMeta {
+      margin: 0 0 14px;
+      font-size: 13px;
+      color: #8a7a62;
+      line-height: 1.45;
+    }
+
+    .startQuickPaths {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin: 8px 0 18px;
+      text-align: left;
+    }
+    .startPathCard {
+      flex: 1 1 240px;
+      max-width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #3a2810;
+      background: rgba(13, 10, 7, 0.65);
+      .startPathCardLabel {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #7a6a54;
+        margin-bottom: 4px;
+      }
+      .startPathCardTitle {
+        margin: 0 0 8px;
+        font-size: 1.25em;
+        font-weight: 700;
+        color: #c8a84a;
+      }
+      .startPathCardDesc {
+        margin: 0 0 12px;
+        font-size: 14px;
+        color: #b8a88a;
+        line-height: 1.45;
+      }
+      .startPathCardCta {
+        margin-top: 0;
+        width: 100%;
+        max-width: 14em;
+      }
+    }
+    .startPathCard--primary {
+      border-color: #6b4c1e;
+      background: rgba(42, 28, 10, 0.5);
+    }
+
+    .startStepList {
+      margin: 0 0 16px;
+      padding-left: 22px;
+      text-align: left;
+      color: #b8a88a;
+      font-size: 14px;
+      line-height: 1.45;
+      li {
+        margin-bottom: 10px;
+      }
+      .startStepTitle {
+        display: block;
+        font-weight: 700;
+        color: #d4c4a4;
+        margin-bottom: 2px;
+      }
+    }
+
     p {
       margin: 10px 0;
       color: #c8b89a;
@@ -149,7 +248,9 @@ body, #root, .App {
       flex-direction: column;
       align-items: center;
       gap: 8px;
-      margin-top: 6px;
+      margin-top: 10px;
+      padding-top: 12px;
+      border-top: 1px solid #3a2810;
     }
     .startButton {
       display: block;
@@ -382,6 +483,40 @@ body, #root, .App {
       border-color: #fff;
       color: #fff;
       .mobileOnboardingTitle {
+        color: #fff;
+      }
+    }
+    .testerWelcome {
+      background: #111;
+      border-color: #fff;
+      color: #fff;
+      .testerWelcomeTitle,
+      .testerWelcomeLead {
+        color: #fff;
+      }
+      .testerWelcomeList {
+        color: #fff;
+      }
+    }
+    .startMeta {
+      color: #ccc;
+    }
+    .startPathCard {
+      background: #111;
+      border-color: #fff;
+      .startPathCardLabel {
+        color: #aaa;
+      }
+      .startPathCardTitle {
+        color: #fff;
+      }
+      .startPathCardDesc {
+        color: #ddd;
+      }
+    }
+    .startStepList {
+      color: #ddd;
+      .startStepTitle {
         color: #fff;
       }
     }
